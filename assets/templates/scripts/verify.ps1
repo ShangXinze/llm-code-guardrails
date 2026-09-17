@@ -31,8 +31,10 @@ Write-Host "guardrails: 计划源=$ROADMAP_REL 归档=$TASKS_REL/ 证据=$EVIDEN
 $root = (git rev-parse --show-toplevel 2>$null)
 if (-not $root) { $root = (Get-Location).Path }
 Set-Location $root
-New-Item -ItemType Directory -Force -Path var | Out-Null
-$log = "var/verify-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+# 证据日志必须落在配置声明的 evidence 目录（与 consistency-audit 同一路径）
+if (-not $EVIDENCE_REL) { $EVIDENCE_REL = 'var' }
+New-Item -ItemType Directory -Force -Path $EVIDENCE_REL | Out-Null
+$log = Join-Path $EVIDENCE_REL "verify-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 Write-Host "verify mode=$Mode root=$root log=$log"
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {

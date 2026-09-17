@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-09-17 verify 证据日志仍写死 var/（P0）
+
+- 症状：`.guardrails.json` 的 `evidence` 已传给 audit，但 `verify.sh|ps1` 仍创建 `var/` 并把
+  日志写成 `var/verify-*.log`。自定义 evidence 时审计找配置目录、verify 写 `var/`，证据检查会假失败或漏检。
+- 改法：日志目录改为 `$EVIDENCE_REL`（与 audit 同一路径），ps1 用 `Join-Path`。
+- 来源：外部评审指出的配置单点未闭合
+
 ## 2026-09-17 配置单点 + doctor + init 档位（阶段 1）
 
 - 症状：路径仍靠 `verify.*` 变量 + 手工 CLI 三参数，假错误风险未根除；新仓库冷启动过重；

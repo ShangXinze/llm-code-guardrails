@@ -35,8 +35,10 @@ echo "guardrails: 计划源=$ROADMAP_REL 归档=$TASKS_REL/ 证据=$EVIDENCE_REL
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$ROOT"
-mkdir -p var
-LOG="var/verify-$(date +%Y%m%d-%H%M%S).log"
+# 证据日志必须落在配置声明的 evidence 目录，而不是写死 var/ ——
+# 否则 audit 查 EVIDENCE_REL、verify 写 var/，自定义 evidence 时会假失败/假通过。
+mkdir -p "$EVIDENCE_REL"
+LOG="$EVIDENCE_REL/verify-$(date +%Y%m%d-%H%M%S).log"
 exec > >(tee -a "$LOG") 2>&1
 echo "verify mode=$MODE root=$ROOT log=$LOG"
 
