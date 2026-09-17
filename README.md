@@ -17,12 +17,12 @@
 ## 快速开始
 
 ```bash
-# 查看将创建哪些文件
-node path/to/llm-code-guardrails/scripts/init_repo.mjs ./my-repo \
+# 克隆到本地任意目录后
+node scripts/init_repo.mjs ./my-repo \
   --name="my-repo" --stack=node --dry-run
 
 # 实装（默认 full；可选 scope-only / lint-only / minimal）
-node path/to/llm-code-guardrails/scripts/init_repo.mjs ./my-repo \
+node scripts/init_repo.mjs ./my-repo \
   --name="my-repo" --stack=node
 
 # 只读体检
@@ -34,13 +34,15 @@ node ./my-repo/scripts/doctor.mjs
 ## 目录
 
 ```
-llm-code-guardrails/
-  SKILL.md                 # 技能说明与使用流程
-  scripts/init_repo.mjs    # 脚手架
-  assets/templates/        # 铺进目标仓库的模板与门禁脚本
-  references/              # 可读性 / 验证 / 任务卡 / 一致性 / 设计依据
-  CHANGELOG.md             # 真实使用回流的修改记录
+SKILL.md                 # 技能说明与使用流程
+scripts/init_repo.mjs    # 脚手架
+assets/templates/        # 铺进目标仓库的模板与门禁脚本
+references/              # 可读性 / 验证 / 任务卡 / 一致性 / 设计依据
+CHANGELOG.md             # 真实使用回流的修改记录
 ```
+
+安装到 Agent 技能目录时，把整个仓库（或 `SKILL.md` 所在目录）放到例如
+`~/.agents/skills/llm-code-guardrails/`，目录名即技能 ID。
 
 ## 文档地图
 
