@@ -160,7 +160,7 @@ node scripts/consistency-audit.mjs --report      # 项目初期先看报告，�
 - `references/verification.md` —— 充分验证配方：AC↔命令映射、红绿证据、分层验证、边界与失败路径、证据留档、失败处置。
 - `references/rules-task.md` —— **填写 `TASK.md` 时先读它**：验收标准怎么写才可判定、白名单怎么划、进度日志的规矩。
 - `references/planning-and-consistency.md` —— 逐项完成流程与三层一致性机制、一致性审计各项检查说明、何时该改计划。
-- `references/tool-integration.md` —— 接入 ZCode / Claude Code / Codex / Cursor / Copilot，三段指令怎么发，已有验证入口怎么接。
+- `references/tool-integration.md` —— 接入各类 Agent 宿主（Claude Code / Codex / Cursor / Copilot 等），三段指令怎么发，已有验证入口怎么接。
 - `references/design-rationale.md` —— **要删规则前先读它**：每条规则拦住的真实失效、借鉴来源、已知局限。
 - `CHANGELOG.md` —— **来自真实使用的修改记录与待办**：某仓库踩到的症状 → 改法。
   每隔一段时间读一遍；收尾时若撞到规则/模板/脚本自身的毛病，追加一条（`finish.md` 第 9 步会问）。
