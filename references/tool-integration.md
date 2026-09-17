@@ -6,7 +6,7 @@
 
 | 工具 | 落点 | 写法 |
 |---|---|---|
-| ZCode | 项目根 `AGENTS.md` | 已就位即可；技能装在 `~/.agents/skills/`（通用）或 `<项目>/.agents/skills/`（随仓库共享） |
+| 通用 Agent | 项目根 `AGENTS.md` | 已就位即可；技能装在 `~/.agents/skills/`（通用）或 `<项目>/.agents/skills/`（随仓库共享） |
 | Claude Code | 项目根 `CLAUDE.md` | 写 `@AGENTS.md`（导入语法）或一行"本仓库规则以 AGENTS.md 为准，每轮先读它" |
 | Codex / 通用 Agent | 根目录 `AGENTS.md` | 已就位，无需额外配置 |
 | Cursor | `.cursor/rules/agents.mdc` | frontmatter 后写一行指向 `AGENTS.md` |

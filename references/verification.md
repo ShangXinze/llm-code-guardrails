@@ -70,7 +70,7 @@ AC3：人工确认：取消订单后列表页不再出现该订单（截图/录�
 写法对照：
 
 ```
-差的写法：unwrap_used 违规约 110 处，开了 G-3 收敛
+差的写法：unwrap_used 违规约 110 处，开了收敛任务
 好的写法：`cargo clippy --workspace --message-format=short -- -W clippy::unwrap_used` → 63 条
           （口径：生产目标；加 --all-targets 另有 249 条，不计入本次收敛范围）
 ```

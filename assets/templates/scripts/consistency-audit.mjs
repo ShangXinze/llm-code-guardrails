@@ -576,7 +576,7 @@ if (archiveProblems.length && !archiveText) {
         .map((e) => {
           const rel = parentRel === '.' ? e.name : `${parentRel}/${e.name}`;
           const mds = walkFiles(join(parentAbs, e.name)).filter((f) => extOf(f) === '.md');
-          // 排序按"像不像任务卡目录"：卡片必然写出模块 ID（M1 / G-3b 这类词元），
+          // 排序按"像不像任务卡目录"：卡片必然写出模块 ID（M1 / T2-3 这类词元），
           // 只数 md 数量会把 docs/contracts、docs/decisions 排到真归档目录前面（实测过）。
           const hits = mds.filter((f) => /\b[A-Z]\d+(-\d+)?\b/.test(read(f))).length;
           return { rel, md: mds.length, hits };
