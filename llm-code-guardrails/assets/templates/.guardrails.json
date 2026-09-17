@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "level": "{{LEVEL}}",
+  "stack": "{{STACK}}",
+  "roadmap": "{{ROADMAP_REL}}",
+  "tasks": "{{TASKS_REL}}",
+  "evidence": "{{EVIDENCE_REL}}",
+  "taskFile": "TASK.md",
+  "docSections": ["职责", "入口", "依赖", "对外接口"]
+}
