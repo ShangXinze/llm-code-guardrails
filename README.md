@@ -4,6 +4,8 @@
 
 > 核心判断：**规则能写成脚本的，就不要只写成文档。** 只写在 Markdown 里的约束对 LLM 是建议，不是约束。
 
+效果演示：[docs/demo.html](docs/demo.html)（浏览器打开即可点选文件试 scope-check）。
+
 ## 能拦住什么
 
 | 失效 | 机制 |
@@ -47,6 +49,7 @@ CHANGELOG.md             # 真实使用回流的修改记录
 ## 文档地图
 
 - `SKILL.md` — 何时用、怎么铺、怎么跑循环
+- `docs/demo.html` — 效果演示（门禁输出示意 + 可点选的 scope-check）
 - `references/design-rationale.md` — 删规则前先读：每条拦住什么失效
 - `references/rules-task.md` — 怎么写一张可执行的任务卡
 - `references/verification.md` — 红绿证据与分层验证

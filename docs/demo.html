@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>码矩 · LLM 代码护栏</title>
+<style>
+  :root {
+    --bg: #0c0f14;
+    --bg2: #12171f;
+    --bg3: #1a2130;
+    --ink: #e8edf5;
+    --muted: #8b96a8;
+    --line: #2a3344;
+    --accent: #5b9fd4;
+    --ok: #3dba7c;
+    --warn: #d4a017;
+    --bad: #e05d5d;
+    --mono: "Cascadia Code", "SF Mono", Consolas, "Noto Sans SC", monospace;
+    --sans: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 28px 80px; }
+
+  /* hero */
+  .hero { padding: 36px 0 28px; border-bottom: 1px solid var(--line); }
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 2px 12px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.2;
+  }
+  h1 span { color: var(--accent); }
+  .sub {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 40em;
+  }
+  .id-line {
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .id-line b { color: var(--ink); font-weight: 500; }
+
+  /* sections */
+  section { margin-top: 48px; }
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before {
+    content: "";
+    width: 3px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .lead { color: var(--muted); margin-bottom: 20px; max-width: 48em; }
+
+  /* goals grid */
+  .goals {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .goal {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 18px 16px;
+  }
+  .goal h3 {
+    font-size: 15px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .goal h3 em {
+    font-style: normal;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    opacity: .9;
+  }
+  .goal p { font-size: 13.5px; color: var(--muted); }
+
+  /* terminal */
+  .term {
+    background: #0a0d12;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .term-bar {
+    background: var(--bg3);
+    padding: 8px 14px;
+    color: var(--muted);
+    font-size: 12px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+  }
+  .term-body { padding: 16px 18px; overflow-x: auto; }
+  .term-body .cmd { color: var(--accent); }
+  .term-body .ok { color: var(--ok); }
+  .term-body .warn { color: var(--warn); }
+  .term-body .bad { color: var(--bad); }
+  .term-body .dim { color: var(--muted); }
+  .term-body pre { white-space: pre-wrap; word-break: break-all; }
+
+  /* compare */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  .pane {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .pane h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 12px;
+  }
+  .pane.before h3 { color: var(--bad); }
+  .pane.after h3 { color: var(--ok); }
+  .pane ul { list-style: none; }
+  .pane li {
+    padding: 8px 0 8px 18px;
+    position: relative;
+    font-size: 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .pane li:last-child { border-bottom: 0; }
+  .pane.before li::before { content: "✗"; position: absolute; left: 0; color: var(--bad); }
+  .pane.after li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); }
+  .pane li b { color: var(--ink); font-weight: 500; }
+
+  /* flow */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .step {
+    flex: 1 1 110px;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 10px;
+    text-align: center;
+    min-width: 100px;
+  }
+  .step .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .step .t { font-size: 13px; font-weight: 500; }
+  .arrow {
+    align-self: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 0 2px;
+  }
+
+  /* levels */
+  .levels {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .levels th, .levels td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+  .levels th {
+    background: var(--bg3);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+  .levels tr:last-child td { border-bottom: 0; }
+  .levels code {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .pill.hot { border-color: var(--accent); color: var(--accent); }
+
+  /* interactive */
+  .lab {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .lab h3 { font-size: 15px; margin-bottom: 8px; }
+  .lab p.hint { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+  .chip.on {
+    border-color: var(--accent);
+    background: rgba(91, 159, 212, .12);
+    color: var(--accent);
+  }
+  .chip.deny-list { border-style: dashed; }
+  .lab-btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: rgba(91, 159, 212, .12);
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .lab-btn:hover { background: rgba(91, 159, 212, .22); }
+  .lab-out {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: #0a0d12;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    min-height: 88px;
+    white-space: pre-wrap;
+  }
+  .lab-out.pass { border-color: rgba(61, 186, 124, .45); }
+  .lab-out.fail { border-color: rgba(224, 93, 93, .45); }
+
+  /* principles */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .p-card {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .p-card strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: var(--accent);
+  }
+  .p-card span { font-size: 13px; color: var(--muted); }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  footer code {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="badge">SKILL · 可执行规范</div>
+    <h1>码<span>矩</span></h1>
+    <p class="sub">给 LLM 写代码立下能被执行的规矩：范围锁死、任务不漂、证据落地、模块写完仍像同一个项目。规则能写成脚本的，就不要只写成文档。</p>
+    <p class="id-line">技能 ID <b>llm-code-guardrails</b> · 中文名 <b>码矩</b></p>
+  </header>
+
+  <section>
+    <h2>五个目标，各有机制</h2>
+    <p class="lead">不是口号清单。每一条都绑着 lint、门禁脚本或审计检查，违规会失败退出。</p>
+    <div class="goals">
+      <div class="goal">
+        <h3>极强可读性 <em>lint</em></h3>
+        <p>嵌套、函数长度、复杂度、空词命名 —— 能机检的进 lint，不能机检的写成对照示例。</p>
+      </div>
+      <div class="goal">
+        <h3>不偏移 <em>scope-check</em></h3>
+        <p>唯一计划源 + SCOPE 白名单哨兵块。改范围外文件？门禁直接失败。</p>
+      </div>
+      <div class="goal">
+        <h3>逐项完成 <em>TASK 卡</em></h3>
+        <p>一次一张卡。完成 → 评审 → 归档 → 再取下一个。禁止跳任务、并行开卡。</p>
+      </div>
+      <div class="goal">
+        <h3>充分验证 <em>verify</em></h3>
+        <p>红绿证据、分层验证（fast / full）、日志落盘。声明不算数，命令与输出才算。</p>
+      </div>
+      <div class="goal">
+        <h3>整体一致 <em>consistency-audit</em></h3>
+        <p>宪法、契约、术语表 + 适应度函数。模块多了，合起来还得像同一个项目。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>开发循环</h2>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div class="t">取队首</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">02</div><div class="t">生成 TASK</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">03</div><div class="t">复述确认</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">04</div><div class="t">红→绿</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">05</div><div class="t">两阶段评审</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">06</div><div class="t">verify --full</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="n">07</div><div class="t">归档</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>效果对比</h2>
+    <div class="compare">
+      <div class="pane before">
+        <h3>没有护栏时</h3>
+        <ul>
+          <li><b>改测试骗绿</b> —— 验证闭环价值归零</li>
+          <li><b>顺手重构</b> —— diff 无法 review</li>
+          <li><b>任务漂移</b> —— 越做越野，模块不像一个项目</li>
+          <li><b>新会话失忆</b> —— 重复问项目结构</li>
+          <li><b>完成无痕迹</b> —— 声称 done，查无证据</li>
+        </ul>
+      </div>
+      <div class="pane after">
+        <h3>装上码矩之后</h3>
+        <ul>
+          <li><b>白名单外改动</b> → scope-check exit 1</li>
+          <li><b>改测试必须申报</b> → 未申报视为越界</li>
+          <li><b>路径写进配置</b> → .guardrails.json 单点</li>
+          <li><b>doctor 只读体检</b> → 卡在哪一眼看清</li>
+          <li><b>审计查漂移</b> → 文档/依赖/命名/证据</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>门禁输出示意</h2>
+    <p class="lead">真实脚本会打印生效配置；路径假错误先看第一行。</p>
+    <div class="term">
+      <div class="term-bar"><span>doctor · scope-check · consistency-audit</span><span>exit code</span></div>
+      <div class="term-body"><pre><span class="cmd">$</span> node scripts/doctor.mjs
+doctor  root=/path/to/repo
+  <span class="ok">配置=config(.guardrails.json) 档位=scope-only 计划源=ROADMAP.md 归档=docs/tasks/ 证据=var/</span>
+<span class="ok">✓</span> config  (1)
+<span class="ok">✓</span> gates  (1)
+<span class="ok">✓</span> self-test  (1)
+<span class="ok">✓</span> paths  (1)
+<span class="warn">⚠</span> git  (1)
+    - 未检测到 git；scope-check 需 SCOPE_FILES 显式注入
+结果：<span class="ok">0 error</span> / 1 warn
+
+<span class="cmd">$</span> node scripts/scope-check.mjs TASK.md
+<span class="bad">范围校验失败：</span>
+  - <span class="bad">越界（不在 MODIFY / CREATE 白名单）: src/utils/logger.ts</span>
+  - <span class="bad">禁止修改（DENY）: CONSTITUTION.md</span>
+处理方式：停止修改，在 TASK.md 写「范围变更请求」，等待人类确认。
+
+<span class="cmd">$</span> node scripts/consistency-audit.mjs --report
+一致性审计  root=/path/to/repo  模块=5
+  <span class="ok">配置=config … 归档=docs/tasks/ 证据=var/</span>
+✓ module-registry  (5)
+✓ dependency-direction
+<span class="warn">⚠</span> naming  (2)
+    - src/api/handler.ts:41: 函数名 handle 是空词
+    - src/core/util.rs:12: 函数名 process 是空词
+结果：0 error / <span class="warn">1 warn</span></pre></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>动手试试：范围锁</h2>
+    <p class="lead">点选「本次改动」的文件，再点「跑 scope-check」。白名单与 DENY 来自任务卡哨兵块。</p>
+    <div class="lab">
+      <h3>TASK.md · SCOPE</h3>
+      <p class="hint">蓝实线 = MODIFY/CREATE 白名单 · 虚线 = DENY 禁止</p>
+      <div class="files" id="files"></div>
+      <button class="lab-btn" id="runBtn" type="button">跑 scope-check</button>
+      <div class="lab-out" id="out">选择要改动的文件，然后运行门禁。</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>init 档位</h2>
+    <p class="lead">冷启动不必一次立宪。按成熟度选档，路径写入 <code style="font-family:var(--mono);color:var(--accent)">.guardrails.json</code>。</p>
+    <table class="levels">
+      <thead>
+        <tr><th>档位</th><th>铺什么</th><th>何时用</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--level=full</code> <span class="pill hot">默认</span></td>
+          <td>规则文档 + 门禁 + 审计 + doctor + verify</td>
+          <td>多模块正式开发</td>
+        </tr>
+        <tr>
+          <td><code>--level=scope-only</code></td>
+          <td>门禁 + TASK + prompts + ROADMAP 骨架</td>
+          <td>探索期或已有计划源</td>
+        </tr>
+        <tr>
+          <td><code>--level=lint-only</code></td>
+          <td>仅配置与 .gitignore</td>
+          <td>先配 lint，暂不锁范围</td>
+        </tr>
+        <tr>
+          <td><code>--level=minimal</code></td>
+          <td>门禁 + TASK + prompts（旧 --minimal）</td>
+          <td>已有上位治理体系</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>设计原则</h2>
+    <div class="principles">
+      <div class="p-card"><strong>脚本优先</strong><span>能机检的不要只写 Markdown</span></div>
+      <div class="p-card"><strong>单点真相</strong><span>计划 / 白名单 / 路径各只有一处</span></div>
+      <div class="p-card"><strong>fail-closed</strong><span>空白名单 = 任何改动都越界</span></div>
+      <div class="p-card"><strong>静默失效最危险</strong><span>跳过的检查也要打印原因</span></div>
+      <div class="p-card"><strong>警告要收敛</strong><span>33 条噪音 = 0 条警告</span></div>
+      <div class="p-card"><strong>人类签字</strong><span>宪法与模块拆分不交给 Agent 代定</span></div>
+    </div>
+  </section>
+
+  <footer>
+    码矩 · llm-code-guardrails · 可执行版 LLM 代码护栏
+  </footer>
+</div>
+
+<script>
+(function () {
+  var SPEC = [
+    { path: "TASK.md", kind: "modify" },
+    { path: "src/modules/order/service.ts", kind: "modify" },
+    { path: "src/modules/order/types.ts", kind: "create" },
+    { path: "tests/order/service.test.ts", kind: "modify" },
+    { path: "src/utils/logger.ts", kind: "other" },
+    { path: "CONSTITUTION.md", kind: "deny" },
+    { path: "AGENTS.md", kind: "deny" },
+    { path: "package.json", kind: "deny" },
+    { path: "docs/contracts/errors.md", kind: "deny" }
+  ];
+  var picked = {};
+  var box = document.getElementById("files");
+  var out = document.getElementById("out");
+
+  function hit(path, kind) {
+    if (kind === "modify" || kind === "create") return path === "TASK.md" || path.indexOf("src/modules/order/") === 0 || path.indexOf("tests/order/") === 0;
+    return false;
+  }
+  function isDeny(path) {
+    return path === "CONSTITUTION.md" || path === "AGENTS.md" || path === "package.json" || path.indexOf("docs/contracts/") === 0;
+  }
+
+  SPEC.forEach(function (f) {
+    var el = document.createElement("button");
+    el.type = "button";
+    el.className = "chip" + (f.kind === "deny" ? " deny-list" : "");
+    el.textContent = f.path;
+    el.title = f.kind === "deny" ? "DENY：禁止修改" : f.kind === "other" ? "白名单外" : "白名单内";
+    el.addEventListener("click", function () {
+      picked[f.path] = !picked[f.path];
+      el.classList.toggle("on", !!picked[f.path]);
+    });
+    box.appendChild(el);
+  });
+
+  document.getElementById("runBtn").addEventListener("click", function () {
+    var changed = Object.keys(picked).filter(function (k) { return picked[k]; });
+    if (!changed.length) {
+      out.className = "lab-out";
+      out.textContent = "范围校验通过：0 个变更文件均在白名单内。\n（没有选中任何文件）";
+      return;
+    }
+    var violations = [];
+    changed.forEach(function (file) {
+      if (isDeny(file)) {
+        violations.push("禁止修改（DENY）: " + file);
+        return;
+      }
+      if (!hit(file, "x")) {
+        violations.push("越界（不在 MODIFY / CREATE 白名单）: " + file);
+      }
+    });
+    if (violations.length) {
+      out.className = "lab-out fail";
+      out.textContent =
+        "范围校验失败：\n" +
+        violations.map(function (v) { return "  - " + v; }).join("\n") +
+        "\n\n处理方式：停止修改，在 TASK.md 写「范围变更请求」，等待人类确认。";
+    } else {
+      out.className = "lab-out pass";
+      out.textContent = "范围校验通过：" + changed.length + " 个变更文件均在白名单内。\n" + changed.map(function (c) { return "  · " + c; }).join("\n");
+    }
+  });
+})();
+</script>
+</body>
+</html>
