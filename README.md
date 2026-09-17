@@ -56,4 +56,4 @@ CHANGELOG.md             # 真实使用回流的修改记录
 
 ## 许可
 
-请按你的分发需要自行补充 LICENSE。本仓库内容为方法论与脚本模板，使用前请在目标仓库做门禁自测（`node --test scripts/*.test.mjs`）。
+MIT — 见 [LICENSE](LICENSE)。使用前请在目标仓库做门禁自测（`node --test scripts/*.test.mjs` 或目标仓库内对应路径）。
